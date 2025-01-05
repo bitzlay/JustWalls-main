@@ -9,17 +9,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(EntityKineticBullet.class)
 public abstract class EntityKineticBulletMixin {
-
-    @Shadow
-    private int blockDamage;
-
     @Inject(method = "onHitBlock", at = @At("HEAD"), cancellable = true, remap = false)
     private void onHitStructureBlock(BlockHitResult result, Vec3 startVec, Vec3 endVec, CallbackInfo ci) {
         EntityKineticBullet bullet = (EntityKineticBullet)(Object)this;
@@ -33,7 +28,9 @@ public abstract class EntityKineticBulletMixin {
                 BlockState masterState = level.getBlockState(masterPos);
                 DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(level);
 
-                if(damageBlockSaveData.damageBlock(level, masterPos, this.blockDamage) <= 0) {
+                float damage = bullet.getDamage(result.getLocation());
+
+                if(damageBlockSaveData.damageBlock(level, masterPos, (int) damage) <= 0) {
                     level.destroyBlock(masterPos, true);
                     damageBlockSaveData.removeBlock(masterPos);
                 }
