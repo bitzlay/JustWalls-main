@@ -25,12 +25,13 @@ public abstract class EntityKineticBulletMixin {
 
     @Shadow private int blockDamage;
 
-    @Inject(method = "<init>", at = @At("RETURN"))
+    @Inject(method = "<init>(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/resources/ResourceLocation;Lnet/minecraft/resources/ResourceLocation;ZLcom/tacz/guns/resource/pojo/data/gun/GunData;Lcom/tacz/guns/resource/pojo/data/gun/BulletData;)V",
+            at = @At("RETURN"))
     private void captureBlockDamage(Level worldIn, LivingEntity throwerIn, ItemStack gunItem, ResourceLocation ammoId, ResourceLocation gunId, boolean isTracerAmmo, GunData gunData, BulletData bulletData, CallbackInfo ci) {
         this.blockDamage = bulletData.getBlockDamage();
     }
 
-    @Inject(method = "onHitBlock", at = @At("HEAD"), cancellable = true, remap = false)
+    @Inject(method = "onHitBlock", at = @At("HEAD"), cancellable = true,remap = false)
     private void onHitStructureBlock(BlockHitResult result, Vec3 startVec, Vec3 endVec, CallbackInfo ci) {
         EntityKineticBullet bullet = (EntityKineticBullet)(Object)this;
         Level level = bullet.level();
@@ -43,9 +44,7 @@ public abstract class EntityKineticBulletMixin {
                 BlockState masterState = level.getBlockState(masterPos);
                 DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(level);
 
-                float damage = this.blockDamage;
-
-                if(damageBlockSaveData.damageBlock(level, masterPos, (int) damage) <= 0) {
+                if(damageBlockSaveData.damageBlock(level, masterPos, this.blockDamage) <= 0) {
                     level.destroyBlock(masterPos, true);
                     damageBlockSaveData.removeBlock(masterPos);
                 }
