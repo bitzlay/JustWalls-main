@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "com.starspath.justwalls.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "justwalls.refmap.json",
+  "mixins": [
+    "EntityKineticBulletMixin"
+  ],
+  "minVersion": "0.8",
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
