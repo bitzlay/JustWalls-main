@@ -177,8 +177,9 @@ dependencies {
     // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}-forge:${jei_version}")
 
     runtimeOnly(fg.deobf("mezz.jei:jei-1.20.1-forge:${jei_version}"))
+    implementation fg.deobf("curse.maven:cloth-config-348521:5729105")
 
-    runtimeOnly fg.deobf('curse.maven:timeless-and-classics-zero-1028108:5529117-sources-5529578')
+    implementation fg.deobf(files("libs/tacz.jar"))
 
 //    runtimeOnly fg.deobf("curse.maven:yetanotherworldprotector-663276:4702337")
 
@@ -234,6 +235,11 @@ tasks.named('jar', Jar).configure {
 // tasks.named('publish').configure {
 //     dependsOn 'reobfJar'
 // }
+
+mixin {
+    add sourceSets.main, "${mod_id}.refmap.json"
+    config "${mod_id}.mixins.json"
+}
 
 // Example configuration to allow publishing using the maven-publish plugin
 publishing {
