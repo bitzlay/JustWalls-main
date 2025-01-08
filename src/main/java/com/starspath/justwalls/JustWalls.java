@@ -6,10 +6,12 @@ import com.starspath.justwalls.init.ModBlockEntity;
 import com.starspath.justwalls.init.ModBlocks;
 import com.starspath.justwalls.init.ModCreativeModeTab;
 import com.starspath.justwalls.init.ModItems;
+import com.starspath.justwalls.world.DamageBlockSaveData;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.level.BlockEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -21,6 +23,9 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
+
+import static com.starspath.justwalls.BlockHPConfig.getBlockHP;
+import static com.starspath.justwalls.BlockHPConfig.hasCustomHP;
 
 // The value here should match an entry in the META-INF/mods.toml file
 @Mod(JustWalls.MODID)
@@ -39,6 +44,7 @@ public class JustWalls
 
         // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, BlockHPConfig.SPEC, "justwalls-block-hp.toml");
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
@@ -142,20 +148,20 @@ public class JustWalls
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        // Do something when the server starts
+        DamageBlockSaveData.get(event.getServer().overworld());
         LOGGER.info("HELLO from server starting");
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ClientModEvents
     {
         @SubscribeEvent
-        public static void onClientSetup(FMLClientSetupEvent event)
-        {
-            // Some client setup code
-            LOGGER.info("HELLO FROM CLIENT SETUP");
-            LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+        public static void onBlockPlace(BlockEvent.EntityPlaceEvent event) {
+            if(!event.getLevel().isClientSide() && hasCustomHP(event.getPlacedBlock().getBlock())) {
+                DamageBlockSaveData data = DamageBlockSaveData.get(event.getLevel());
+                data.setBlockHP(event.getPos(), getBlockHP(event.getPlacedBlock().getBlock()));
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.starspath.justwalls.world;
 
+import com.starspath.justwalls.BlockHPConfig;
 import com.starspath.justwalls.blocks.abstracts.StructureBlock;
 import com.starspath.justwalls.utils.Utils;
 import net.minecraft.core.BlockPos;
@@ -20,9 +21,12 @@ public class DamageBlockSaveData extends SavedData {
 
     public HashMap<Long,Integer> storage = new HashMap<>();
 
-    public int damageBlock(Level world, BlockPos pos, int block_damage){
+    public int damageBlock(Level world, BlockPos pos, int block_damage) {
+        if (!storage.containsKey(pos.asLong()) && BlockHPConfig.hasCustomHP(world.getBlockState(pos).getBlock())) {
+            storage.put(pos.asLong(), getDefaultResistance(world, pos));
+        }
         int curDamage = storage.computeIfAbsent(pos.asLong(), k->getDefaultResistance(world,pos));
-        int newDamage = Math.max(0,curDamage-block_damage);
+        int newDamage = Math.max(0, curDamage-block_damage);
         storage.put(pos.asLong(), newDamage);
         setDirty();
         return newDamage;
@@ -50,12 +54,15 @@ public class DamageBlockSaveData extends SavedData {
         return getBlockHP(pos) == getDefaultResistance(level, pos);
     }
 
-    public int getDefaultResistance(LevelAccessor world, BlockPos pos){
+    public int getDefaultResistance(LevelAccessor world, BlockPos pos) {
         Block block = world.getBlockState(pos).getBlock();
-        if(block instanceof StructureBlock structureBlock){
+        if (block instanceof StructureBlock structureBlock) {
             return (int)(Utils.getStrength(structureBlock.tier) * 100);
         }
-        return (int)(block.getExplosionResistance()*100d);
+        if (BlockHPConfig.hasCustomHP(block)) {
+            return BlockHPConfig.getBlockHP(block);
+        }
+        return (int)(block.getExplosionResistance() * 100d);
     }
 
     @Nonnull

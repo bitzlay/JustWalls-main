@@ -1,5 +1,6 @@
 package com.starspath.justwalls.Network;
 
+import com.starspath.justwalls.BlockHPConfig;
 import com.starspath.justwalls.blocks.abstracts.StructureBlock;
 import com.starspath.justwalls.init.PacketHandler;
 import com.starspath.justwalls.world.DamageBlockSaveData;
@@ -38,21 +39,23 @@ public class ServerBoundHoverOverBlockPacket {
 
     public boolean handle(Supplier<NetworkEvent.Context> context) {
         context.get().enqueueWork(() -> {
-            // Handle the packet on the server side here
             ServerPlayer serverPlayer = context.get().getSender();
             if (serverPlayer != null) {
-                Level serverLevel = serverPlayer.level(); // This is a ServerLevel
+                Level serverLevel = serverPlayer.level();
                 BlockPos blockPos = new BlockPos(x, y, z);
                 BlockState blockState = serverLevel.getBlockState(blockPos);
                 Block block = blockState.getBlock();
                 DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(serverLevel);
 
-                if (block instanceof StructureBlock structureBlock) {
-                    blockPos = structureBlock.getMasterPos(serverLevel, blockPos, blockState);
-                }
+                boolean isHPBlock = block instanceof StructureBlock || BlockHPConfig.hasCustomHP(block);
                 int maxHp = damageBlockSaveData.getDefaultResistance(serverLevel, blockPos);
-                int currentHP = damageBlockSaveData.hasBlock(blockPos)? damageBlockSaveData.getBlockHP(blockPos) : maxHp;
-                PacketHandler.INSTANCE.sendTo(new ClientBoundStructureHPPacket(currentHP, maxHp, block instanceof StructureBlock), serverPlayer.connection.connection, NetworkDirection.PLAY_TO_CLIENT);
+                int currentHP = damageBlockSaveData.hasBlock(blockPos) ? damageBlockSaveData.getBlockHP(blockPos) : maxHp;
+
+                PacketHandler.INSTANCE.sendTo(
+                        new ClientBoundStructureHPPacket(currentHP, maxHp, isHPBlock),
+                        serverPlayer.connection.connection,
+                        NetworkDirection.PLAY_TO_CLIENT
+                );
             }
         });
         return true;

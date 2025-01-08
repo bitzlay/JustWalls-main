@@ -1,11 +1,13 @@
 package com.starspath.justwalls.mixin;
 
+import com.starspath.justwalls.BlockHPConfig;
 import com.starspath.justwalls.blocks.abstracts.StructureBlock;
 import com.starspath.justwalls.world.DamageBlockSaveData;
 import com.tacz.guns.entity.EntityKineticBullet;
 import com.tacz.guns.resource.pojo.data.gun.BulletData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
@@ -35,19 +37,16 @@ public abstract class EntityKineticBulletMixin {
         Level level = bullet.level();
         BlockPos pos = result.getBlockPos();
         BlockState blockState = level.getBlockState(pos);
+        Block block = blockState.getBlock();
 
-        if(blockState.getBlock() instanceof StructureBlock structureBlock) {
-            BlockPos masterPos = structureBlock.getMasterPos(level, pos, blockState);
-            if(masterPos != null) {
-                DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(level);
+        if(block instanceof StructureBlock structureBlock || BlockHPConfig.hasCustomHP(block)) {
+            DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(level);
 
-                if(damageBlockSaveData.damageBlock(level, masterPos, this.blockDamage) <= 0) {
-                    level.destroyBlock(masterPos, true);
-                    damageBlockSaveData.removeBlock(masterPos);
-                }
-
-                ci.cancel();
+            if(damageBlockSaveData.damageBlock(level, pos, this.blockDamage) <= 0) {
+                level.destroyBlock(pos, true);
+                damageBlockSaveData.removeBlock(pos);
             }
+            ci.cancel();
         }
     }
 }
