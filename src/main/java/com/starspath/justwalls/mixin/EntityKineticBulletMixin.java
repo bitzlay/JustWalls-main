@@ -5,6 +5,7 @@ import com.starspath.justwalls.blocks.abstracts.StructureBlock;
 import com.starspath.justwalls.world.DamageBlockSaveData;
 import com.tacz.guns.entity.EntityKineticBullet;
 import com.tacz.guns.resource.pojo.data.gun.BulletData;
+import com.tacz.guns.util.ExplodeUtil;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -42,10 +43,24 @@ public abstract class EntityKineticBulletMixin {
         if(block instanceof StructureBlock structureBlock || BlockHPConfig.hasCustomHP(block)) {
             DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(level);
 
-            if(damageBlockSaveData.damageBlock(level, pos, this.blockDamage) <= 0) {
-                level.destroyBlock(pos, true);
-                damageBlockSaveData.removeBlock(pos);
+            BlockPos targetPos = block instanceof StructureBlock ?
+                    ((StructureBlock)block).getMasterPos(level, pos, blockState) : pos;
+
+            int damage = this.blockDamage;
+            if(bullet.getAmmoId().getPath().contains("rpg")) {
+                damage *= 50;
+                if(bullet.getAmmoId().getPath().contains("rpg")) {
+                    damage *= 50;
+                    ExplodeUtil.createExplosion(bullet.getOwner(), bullet, 4.0F, 3.0F, true, false, result.getLocation());
+                }
             }
+
+            if(targetPos != null && damageBlockSaveData.damageBlock(level, targetPos, damage) <= 0) {
+                level.destroyBlock(targetPos, true);
+                damageBlockSaveData.removeBlock(targetPos);
+            }
+
+            bullet.discard();
             ci.cancel();
         }
     }
