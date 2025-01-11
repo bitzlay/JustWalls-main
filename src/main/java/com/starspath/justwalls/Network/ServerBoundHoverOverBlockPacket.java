@@ -16,7 +16,6 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public class ServerBoundHoverOverBlockPacket {
-
     private final int x, y, z;
 
     public ServerBoundHoverOverBlockPacket(int x, int y, int z) {
@@ -48,8 +47,17 @@ public class ServerBoundHoverOverBlockPacket {
                 DamageBlockSaveData damageBlockSaveData = DamageBlockSaveData.get(serverLevel);
 
                 boolean isHPBlock = block instanceof StructureBlock || BlockHPConfig.hasCustomHP(block);
-                int maxHp = damageBlockSaveData.getDefaultResistance(serverLevel, blockPos);
-                int currentHP = damageBlockSaveData.hasBlock(blockPos) ? damageBlockSaveData.getBlockHP(blockPos) : maxHp;
+                BlockPos masterPos = blockPos;
+
+                if (block instanceof StructureBlock structureBlock) {
+                    BlockPos tempMasterPos = structureBlock.getMasterPos(serverLevel, blockPos, blockState);
+                    if (tempMasterPos != null) {
+                        masterPos = tempMasterPos;
+                    }
+                }
+
+                int maxHp = damageBlockSaveData.getDefaultResistance(serverLevel, masterPos);
+                int currentHP = damageBlockSaveData.hasBlock(masterPos) ? damageBlockSaveData.getBlockHP(masterPos) : maxHp;
 
                 PacketHandler.INSTANCE.sendTo(
                         new ClientBoundStructureHPPacket(currentHP, maxHp, isHPBlock),
