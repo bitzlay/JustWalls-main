@@ -49,10 +49,7 @@ public abstract class EntityKineticBulletMixin {
             int damage = this.blockDamage;
             if(bullet.getAmmoId().getPath().contains("rpg")) {
                 damage *= 50;
-                if(bullet.getAmmoId().getPath().contains("rpg")) {
-                    damage *= 50;
-                    ExplodeUtil.createExplosion(bullet.getOwner(), bullet, 4.0F, 3.0F, true, false, result.getLocation());
-                }
+                ExplodeUtil.createExplosion(bullet.getOwner(), bullet, 4.0F, 3.0F, true, false, result.getLocation());
             }
 
             if(targetPos != null && damageBlockSaveData.damageBlock(level, targetPos, damage) <= 0) {
