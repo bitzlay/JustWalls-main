@@ -96,7 +96,7 @@ public abstract class EntityKineticBulletMixin {
                         this.explosionDamage,
                         this.explosionRadius,
                         this.explosionKnockback,
-                        this.explosionDestroyBlock,
+                        false,
                         result.getLocation()
                 );
             }

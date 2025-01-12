@@ -1,10 +1,13 @@
 package com.starspath.justwalls;
 
+import com.starspath.justwalls.JustWalls;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.common.MinecraftForge;
@@ -20,6 +23,7 @@ public class BlockHPConfig {
     public static final ForgeConfigSpec SPEC;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> BLOCK_HP_VALUES;
     private static final Map<Block, Integer> maxBlockHP = new HashMap<>();
+    private static List<String> DEFAULT_CONFIG = List.of("minecraft:obsidian=1000");
 
     static {
         BUILDER.push("Block HP Configuration");
@@ -27,11 +31,15 @@ public class BlockHPConfig {
         BLOCK_HP_VALUES = BUILDER
                 .comment("Define HP values for blocks in format 'modid:blockid=hp'")
                 .defineList("blockHPValues",
-                        () -> new ArrayList<>(List.of("minecraft:obsidian=1000")),
+                        () -> DEFAULT_CONFIG,
                         entry -> entry instanceof String && validateEntry((String) entry));
 
         BUILDER.pop();
         SPEC = BUILDER.build();
+    }
+
+    public static void register() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, SPEC,"justwalls-block-hp.toml");
     }
 
     private static boolean validateEntry(String entry) {
@@ -50,18 +58,11 @@ public class BlockHPConfig {
     }
 
     @SubscribeEvent
-    public static void onLoad(final ModConfigEvent.Loading event) {
-        loadConfig();
-    }
-
-    @SubscribeEvent
-    public static void onReload(final ModConfigEvent.Reloading event) {
-        loadConfig();
-    }
-
-    private static void loadConfig() {
+    public static void onLoad(final ModConfigEvent event) {
         maxBlockHP.clear();
-        for (String entry : BLOCK_HP_VALUES.get()) {
+        List<? extends String> configValues = BLOCK_HP_VALUES.get();
+
+        for (String entry : configValues) {
             try {
                 String[] parts = entry.split("=");
                 ResourceLocation resourceLocation = ResourceLocation.tryParse(parts[0].trim());
@@ -70,10 +71,10 @@ public class BlockHPConfig {
                     if (block != null) {
                         int hp = Integer.parseInt(parts[1].trim());
                         maxBlockHP.put(block, hp);
-                    } else {
                     }
                 }
             } catch (Exception e) {
+                // Log or handle parsing errors
             }
         }
     }
@@ -83,7 +84,7 @@ public class BlockHPConfig {
     }
 
     public static int getBlockHP(Block block) {
-        return maxBlockHP.getOrDefault(block, 0);
+        return maxBlockHP.getOrDefault(block, 100);
     }
 
     public static void init() {
